@@ -4,12 +4,14 @@ PROGRAM MUMATERIAL_TEST
 
 
    INTEGER :: istat
-   CHARACTER(LEN=72) :: filename
+   CHARACTER(LEN=256) :: filename
 
 
    filename = 'sphere_mu.dat'
 
-   CALL MUMATERIAL_LOAD(FILENAME,istat)
+   CALL MUMATERIAL_LOAD(TRIM(filename),istat)
+
+   CALL MUMATERIAL_INFO(6)
 
    ! Now call your other routiens
 

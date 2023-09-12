@@ -1,5 +1,6 @@
 
 FC=mpif90
+COMP_OPT = -O0 -fexternal-blas -fbacktrace -fcheck=all -g
 
 LIBSTELL_INC = -I$(STELLOPT_PATH)/LIBSTELL/Release
 LIBSTELL_LIB = $(STELLOPT_PATH)/LIBSTELL/Release/libstell.a
@@ -21,13 +22,13 @@ OBJ=mumaterial_test.o
 EXE=xmumat_test
 
 %.o: %.f90
-	$(FC) -c -o $@ $< $(FFLAGS)
+	$(FC) -c -o $@ $< $(FFLAGS) $(COMP_OPT)
 
 $(EXE): $(OBJ)
-	$(FC) -o $@ $^ $(LDFLAGS) $(LIBS)
+	$(FC) -o $@ $^ $(LDFLAGS) $(LIBS) $(COMP_OPT)
 
 run: $(EXE)
-	$(EXE) >& log_Fspl.txt
+	./$(EXE) >& log.txt
 
 clean:
 	rm *.o $(EXE)
