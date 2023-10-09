@@ -24,7 +24,7 @@ PROGRAM MUMATERIAL_TEST
 
    CALL MUMATERIAL_INFO(6)
 
-   !CALL MUMATERIAL_SETD(1.0d-5, 1000, 300.d0) ! only set if values need to be changed
+   CALL MUMATERIAL_SETD(1.0d-5, 100, 300.d0) ! only set if values need to be changed
 
    CALL MUMATERIAL_INIT(BEXTERNAL,offset)
 
@@ -54,7 +54,7 @@ PROGRAM MUMATERIAL_TEST
       ! python easy axis from spherical coordinate transformations
       theta = 0.0
       phi = 0.0
-      mag = 1.0
+      mag = 1.0!16 * atan(1.d0) * 1.0E-7
       bx = mag*sin(theta)*cos(phi)
       by = mag*sin(theta)*sin(phi)
       bz = mag*cos(theta)
@@ -74,9 +74,9 @@ PROGRAM MUMATERIAL_TEST
 
       pi = 4.0 * atan(1.0)
       
-      min = [550.0, 0.0, 0.0]
-      max = [2000.d0, pi, pi]
-      num_points = [200, 5, 1]
+      min = [510.0, 0.0, 0.0]
+      max = [1000.d0, pi, 2*pi]
+      num_points = [200, 5, 1]![200, 5, 1]
       ! min = [-20.0, -20.0, -20.0]
       ! max = [20.0, 20.0, 20.0]
       ! num_points = [100, 100, 100]
@@ -101,7 +101,7 @@ PROGRAM MUMATERIAL_TEST
                      theta = min(2)
                   end if
                   if (num_points(3) .gt. 1) then
-                     phi = min(3) + 1.0*(k-1)*(max(3)-min(3))/(num_points(3)-1)
+                     phi = min(3) + 1.0*(k-1)*(max(3)-min(3))/(num_points(3))
                   else
                      phi = min(3)
                   end if
