@@ -1,9 +1,10 @@
 PROGRAM MUMATERIAL_TEST
    USE MUMATERIAL_MOD
    IMPLICIT NONE
+   INCLUDE "mpif.h"
 
 
-   INTEGER :: istat
+   INTEGER :: istat, size, rank, comm
    CHARACTER(LEN=256) :: filename
 
    DOUBLE PRECISION, DIMENSION(:), allocatable :: x, y, z, Hx, Hy, Hz, offset
@@ -11,37 +12,51 @@ PROGRAM MUMATERIAL_TEST
    DOUBLE PRECISION :: Bx, By, Bz
    INTEGER :: start, finish, rate
 
-   call SYSTEM_CLOCK(count_rate=rate)
-   call SYSTEM_CLOCK(start)
+   rank = 0
 
-   filename = 'sphere_mu.dat'
+   CALL MPI_INIT(istat)
+   comm = MPI_COMM_WORLD
+   CALL MPI_COMM_SIZE(comm, size, istat)
+   CALL MPI_COMM_RANK(comm, rank, istat)
 
-   allocate(offset(3))
-   offset = [0.0, 0.0, 0.0]
+   IF (rank .eq. 0) THEN
+      CALL SYSTEM_CLOCK(count_rate=rate)
+      CALL SYSTEM_CLOCK(start)
+   END IF
+      filename = 'sphere_mu.dat'
 
-   CALL MUMATERIAL_LOAD(TRIM(filename),istat)
-   ! if (istat/=0) EXIT(2) ! probably need to stop the program in this case?
+      allocate(offset(3))
+      offset = [0.0, 0.0, 0.0]
 
-   CALL MUMATERIAL_INFO(6)
+      CALL MUMATERIAL_LOAD(TRIM(filename),istat, comm)
+      ! if (istat/=0) EXIT(2) ! probably need to stop the program in this case?
 
-   CALL MUMATERIAL_SETD(1.0d-5, 100, 300.d0) ! only set if values need to be changed
+      IF (rank .eq. 0) THEN
+         CALL MUMATERIAL_INFO(6)
+      END IF
 
-   CALL MUMATERIAL_INIT(BEXTERNAL,offset)
+      CALL MUMATERIAL_SETD(1.0d-5, 1000, 0.7d0, 0.75d0, 2000, comm) ! only set if values need to be changed
 
-   CALL SYSTEM_CLOCK(finish)
-   WRITE(*,*) "Time to finish loading: ", real(finish-start)/real(rate)
+      CALL MUMATERIAL_INIT(BEXTERNAL, comm, offset)
 
-   CALL gen_grid(x, y, z)
+      IF (rank .eq. 0) THEN
+         CALL SYSTEM_CLOCK(finish)
+         WRITE(*,*) "Time to finish loading: ", real(finish-start)/real(rate)
+      END IF
+      
+      CALL gen_grid(x, y, z)
 
-   CALL MUMATERIAL_GETB(5.d0, 5.d0, 501.d0, Bx, By, Bz)
-   WRITE(*,*) "H:", Bx / (16 * atan(1.d0) * 1.d-7), By / (16 * atan(1.d0) * 1.d-7), Bz / (16 * atan(1.d0) * 1.d-7)
-   
-   CALL MUMATERIAL_OUTPUT('/home/bch/Documents/IPP/MUMAT_TEST', x, y, z)
+      ! CALL MUMATERIAL_GETB(5.d0, 5.d0, 501.d0, Bx, By, Bz, BEXTERNAL)
+      ! WRITE(*,*) "H:", Bx / (16 * atan(1.d0) * 1.d-7), By / (16 * atan(1.d0) * 1.d-7), Bz / (16 * atan(1.d0) * 1.d-7)
+      
+      CALL MUMATERIAL_OUTPUT('/home/bch/Documents/IPP/MUMAT_TEST', x, y, z, BEXTERNAL, comm)
 
-   CALL SYSTEM_CLOCK(finish)
-   WRITE(*,*) "Time to finish: ", real(finish-start)/real(rate)
+      IF (rank .eq. 0) THEN
+         CALL SYSTEM_CLOCK(finish)
+         WRITE(*,*) "Time to finish: ", real(finish-start)/real(rate)
+      END IF
 
-
+   CALL MPI_FINALIZE(istat)
 
    CONTAINS
 
@@ -74,14 +89,14 @@ PROGRAM MUMATERIAL_TEST
 
       pi = 4.0 * atan(1.0)
       
-      min = [510.0, 0.0, 0.0]
-      max = [1000.d0, pi, 2*pi]
-      num_points = [200, 5, 1]![200, 5, 1]
-      ! min = [-20.0, -20.0, -20.0]
-      ! max = [20.0, 20.0, 20.0]
-      ! num_points = [100, 100, 100]
+      min = [5.0, 0.0, 0.0]
+      max = [1000.d0, pi, 2.0*pi]
+      num_points = [300, 5, 1]![200, 5, 1]
+      ! min = [-10.0, -10.0, -10.0]
+      ! max = [10.0, 10.0, 10.0]
+      ! num_points = [300, 300, 300]
+      
       n_temp = 1
-
       n_points = num_points(1)*num_points(2)*num_points(3)
       allocate(x(n_points))
       allocate(y(n_points))
@@ -92,25 +107,28 @@ PROGRAM MUMATERIAL_TEST
                do k = 1, num_points(3)
                   if (num_points(1) .gt. 1) then
                      r = min(1) + 1.0*(i-1)*(max(1)-min(1))/(num_points(1)-1)
+                     x(n_temp) = min(1) + 1.0*(i-1)*(max(1)-min(1))/(num_points(1)-1)
                   else
                      r = min(1)
+                     x(n_temp) = min(1)
                   end if
                   if (num_points(2) .gt. 1) then
                      theta = min(2) + 1.0*(j-1)*(max(2)-min(2))/(num_points(2)-1)
+                     y(n_temp) = min(2) + 1.0*(j-1)*(max(2)-min(2))/(num_points(2)-1)
                   else
                      theta = min(2)
+                     y(n_temp) = min(2)
                   end if
                   if (num_points(3) .gt. 1) then
                      phi = min(3) + 1.0*(k-1)*(max(3)-min(3))/(num_points(3))
+                     z(n_temp) = min(3) + 1.0*(k-1)*(max(3)-min(3))/(num_points(3)-1)
                   else
                      phi = min(3)
+                     z(n_temp) = min(3)
                   end if
-                  x(n_temp) = r*sin(theta)*cos(phi) + offset(1)
-                  y(n_temp) = r*sin(theta)*sin(phi) + offset(2)
-                  z(n_temp) = r*cos(theta) + offset(3)
-                  ! x(n_temp) = min(1) + 1.0*(i-1)*(max(1)-min(1))/(num_points(1)-1) + offset(1)
-                  ! y(n_temp) = min(2) + 1.0*(j-1)*(max(2)-min(2))/(num_points(2)-1) + offset(2)
-                  ! z(n_temp) = min(3) + 1.0*(k-1)*(max(3)-min(3))/(num_points(3)-1) + offset(3)
+                  x(n_temp) = r*sin(theta)*cos(phi)
+                  y(n_temp) = r*sin(theta)*sin(phi)
+                  z(n_temp) = r*cos(theta)
                   n_temp = n_temp + 1
                enddo
          enddo
