@@ -12,7 +12,35 @@ PROGRAM MUMATERIAL_TEST
    DOUBLE PRECISION :: Bx, By, Bz
    INTEGER :: start, finish, rate
 
+   integer, parameter :: arg_len = 256
+
+   INTEGER :: i, numargs
+   CHARACTER*(arg_len) :: arg1
+   CHARACTER*(arg_len), allocatable, dimension(:) :: args
+
    rank = 0
+
+    !-----------------------------------------------------------------------
+    !     Handle Input Arguments
+    !-----------------------------------------------------------------------
+    numargs = 0
+    i = 0
+    arg1 = ''
+    ! First Handle the input arguments
+    CALL GETCARG(1, arg1, numargs)
+    ALLOCATE(args(numargs))
+    ! Cycle through Arguments
+    i = 1
+    DO WHILE (i <= numargs)
+       call GETCARG(i, args(i), numargs)
+       select case (args(i))
+          case ("-mumat")
+                i = i + 1
+                CALL GETCARG(i, filename, numargs)
+       END SELECT
+       i = i + 1
+    END DO
+    DEALLOCATE(args)
 
    CALL MPI_INIT(istat)
    comm = MPI_COMM_WORLD
@@ -23,7 +51,7 @@ PROGRAM MUMATERIAL_TEST
       CALL SYSTEM_CLOCK(count_rate=rate)
       CALL SYSTEM_CLOCK(start)
    END IF
-      filename = 'sphere_mu.dat'
+      !filename = 'sphere_mu.dat'
 
       allocate(offset(3))
       offset = [0.0, 0.0, 0.0]
@@ -49,7 +77,7 @@ PROGRAM MUMATERIAL_TEST
       ! CALL MUMATERIAL_GETB(5.d0, 5.d0, 501.d0, Bx, By, Bz, BEXTERNAL)
       ! WRITE(*,*) "H:", Bx / (16 * atan(1.d0) * 1.d-7), By / (16 * atan(1.d0) * 1.d-7), Bz / (16 * atan(1.d0) * 1.d-7)
       
-      CALL MUMATERIAL_OUTPUT('/home/bch/Documents/IPP/MUMAT_TEST', x, y, z, BEXTERNAL, comm)
+      CALL MUMATERIAL_OUTPUT('./', x, y, z, BEXTERNAL, comm)
 
       IF (rank .eq. 0) THEN
          CALL SYSTEM_CLOCK(finish)
