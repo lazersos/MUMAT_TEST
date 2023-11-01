@@ -20,6 +20,17 @@ PROGRAM MUMATERIAL_TEST
 
    rank = 0
 
+      DO i_int = 1,6
+            DO i = 1,i_int-1
+               WRITE(6,*) i_int,i
+               CALL FLUSH(6)
+            END DO
+            DO i = i_int+1,6
+               WRITE(6,*) i_int,i
+               CALL FLUSH(6)
+            END DO
+      END DO
+
     !-----------------------------------------------------------------------
     !     Handle Input Arguments
     !-----------------------------------------------------------------------
@@ -63,7 +74,7 @@ PROGRAM MUMATERIAL_TEST
          CALL MUMATERIAL_INFO(6)
       END IF
 
-      CALL MUMATERIAL_SETD(1.0d-5, 1000, 0.7d0, 0.75d0, 2000, comm) ! only set if values need to be changed
+      CALL MUMATERIAL_SETD(1.0d-5, 1000, 0.7d0, 0.75d0, -1, comm) ! only set if values need to be changed
 
       CALL MUMATERIAL_INIT(BEXTERNAL, comm, offset)
 
