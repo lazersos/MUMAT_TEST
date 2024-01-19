@@ -57,10 +57,12 @@ PROGRAM MUMATERIAL_TEST
    comm = MPI_COMM_WORLD
    CALL MPI_COMM_SIZE(comm, size, istat)
    CALL MPI_COMM_RANK(comm, rank, istat)
-
+   
+   CALL MUMATERIAL_SETVERB(.FALSE.)
    IF (rank .eq. 0) THEN
       CALL SYSTEM_CLOCK(count_rate=rate)
       CALL SYSTEM_CLOCK(start)
+      CALL MUMATERIAL_SETVERB(.TRUE.)
    END IF
       !filename = 'sphere_mu.dat'
 
@@ -76,7 +78,7 @@ PROGRAM MUMATERIAL_TEST
 
       CALL MUMATERIAL_SETD(1.0d-5, 1000, 0.7d0, 0.75d0, -1, comm) ! only set if values need to be changed
 
-      CALL MUMATERIAL_INIT(BEXTERNAL, comm, offset)
+      CALL MUMATERIAL_INIT_NEW(BEXTERNAL, comm, offset)
 
       IF (rank .eq. 0) THEN
          CALL SYSTEM_CLOCK(finish)
@@ -89,6 +91,8 @@ PROGRAM MUMATERIAL_TEST
       ! WRITE(*,*) "H:", Bx / (16 * atan(1.d0) * 1.d-7), By / (16 * atan(1.d0) * 1.d-7), Bz / (16 * atan(1.d0) * 1.d-7)
       
       CALL MUMATERIAL_OUTPUT('./', x, y, z, BEXTERNAL, comm)
+
+      CALL MUMATERIAL_FREE()
 
       IF (rank .eq. 0) THEN
          CALL SYSTEM_CLOCK(finish)
